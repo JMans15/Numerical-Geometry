@@ -1,0 +1,236 @@
+#options .tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+#options .tab button {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+#options .tab button:hover {
+    background-color: #ddd;
+}
+
+#options .tab button.active {
+    background-color: #ccc;
+}
+
+#options .tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+#options {
+    margin: 0 20px
+}
+
+#wrapper{
+    width:600px;
+    font-family: 'Arial', sans-serif;
+}
+
+.container {
+    position: relative;
+    overflow: none;
+    float:top;
+    min-width: 50%;
+}
+
+#divcontainer {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    overflow: hidden;
+ 
+}
+
+.floating-div {
+    position: absolute;
+    font-size: 20px;
+}
+
+input[type=number] {
+    width: 4em;
+}
+
+.big_container {
+    display: flex;
+}
+
+.tabcontent button {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+  
+    transition: all 0.3s ease;
+}
+
+.tabcontent button:hover {
+    box-shadow: 0 6px 8px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+    transform: translateY(-2px);
+}
+
+.tabcontent button:active {
+    box-shadow: 0 3px 4px 0 rgba(0,0,0,0.24), 0 8px 10px 0 rgba(0,0,0,0.19);
+    transform: translateY(1px);
+}
+
+/* Hide the default select input */
+select {
+    display: none;
+  }
+  
+  /* Style the custom select input */
+  .custom-select {
+    /* Add some basic styling */
+    display: inline-block;
+    width: 150px;
+    height: 30px;
+    padding: 5px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+  
+    /* Add a hover effect */
+    transition: all 0.2s ease;
+  }
+  
+  .custom-select:hover {
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.16), 0 2px 10px 0 rgba(0,0,0,0.12);
+  }
+  
+  /* Add an arrow */
+  .custom-select::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #555;
+  }
+  
+  /* Style the options */
+  .custom-select option {
+    /* Add some basic styling */
+    display: block;
+    width: 100%;
+    height: 30px;
+    padding: 5px;
+    background-color: #fff;
+    border: none;
+    font-size: 14px;
+    color: #555;
+  
+    /* Add a hover effect */
+    transition: all 0.2s ease;
+  }
+  
+  .custom-select option:hover {
+    background-color: #f1f1f1;
+  }
+
+  
+/* Add some basic styling for the number input */
+input[type="number"] {
+    display: inline-block;
+    width: 50px;
+    height: 20px;
+    padding: 5px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+    cursor: pointer;
+  
+    /* Add a hover effect */
+    transition: all 0.2s ease;
+  }
+  
+  /* Style the number input when it is hovered over */
+  input[type="number"]:hover {
+    background-color: #eee;
+    border-color: #999;
+    color: #333;
+  }
+  
+  /* Style the number input when it is active */
+  input[type="number"]:active {
+    background-color: #ddd;
+    border-color: #999;
+    color: #333;
+  }
+  
+  .custom-file-input {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  
+  input[type="file"] {
+    position: absolute;
+    z-index: -1;
+    top: 10px;
+    left: 8px;
+    font-size: 17px;
+    color: #b8b8b8;
+  }
+  
+  .custom-browse-button {
+    position: relative;
+  }
+
+  .browse-button {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    padding: 15px 0;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px auto;
+    cursor: pointer;
+    width: 100%;
+  
+    transition: all 0.3s ease;
+}
+
+.browse-button:hover {
+    box-shadow: 0 6px 8px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+    transform: translateY(-2px);
+}
+
+.browse-button:active {
+    box-shadow: 0 3px 4px 0 rgba(0,0,0,0.24), 0 8px 10px 0 rgba(0,0,0,0.19);
+    transform: translateY(1px);
+}

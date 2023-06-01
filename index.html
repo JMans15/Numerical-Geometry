@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://twgljs.org/dist/4.x/twgl-full.min.js" defer></script>
+    <script src="nodes_coarse.json"></script>
+    <script src="nodes_fine.json"></script>
+    <script src="circle.json"></script>
+    <script src="circle_fine.json"></script>
+    <script src="delaunay.js"></script>
+    <link rel="stylesheet" href="./style.css" type="text/css">
+    <title> J.Mans - M.Magain </title> <!-- Please insert your names here -->
+</head onload="">
+<body>
+    <div class="big_container">
+        <div id="wrapper">        
+            <div class="container">
+                <canvas id="glcanvas" width="600" height="600" style=" display: block;"></canvas>
+                <div id="divcontainer"></div>
+            </div>
+        </div>
+        <div id="options">
+            <div class="tab">
+                <button class="tablinks" onclick="open_tab(event, 'display')">Display</button>
+                <button class="tablinks" onclick="open_tab(event, 'shull')">SweepHull</button>
+                <button class="tablinks" onclick="open_tab(event, 'nodes')">Nodes</button>
+            </div>
+            <div id="display" class="tabcontent">
+                <div id="display_checkboxes">
+                    <input type="checkbox" id="points" name="points">
+                    <label for="points">Indices</label>
+                    <input type="checkbox" id="hullCheck" name="hullCheck" checked="true">
+                    <label for="hullCheck">Hull</label>
+                    <input type="checkbox" id="meshCheck" name="meshCheck" checked="true">
+                    <label for="meshCheck">Mesh</label>
+                    <input type="checkbox" id="voronoiCheck" name="voronoiCheck" checked="true">
+                    <label for="voronoiCheck">Voronoi</label>
+                </div>
+                <br>
+                <label for="theme_select">Color Theme </label>
+                <select id="theme_select" class="custom-select">
+                    <option value="vintage">Vintage</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="gruvbox_light">Gruvbox Light</option>
+                    <option value="gruvbox_dark">Gruvbox Dark</option>
+                    <option value="nord">Nord</option>
+                </select>
+            </div>
+            <div id="shull" class="tabcontent">
+                <button type="button" id="startButton" onclick="start();"> Start SweepHull </button>
+                <button type="button" id="stopButton" onclick="stop();"> Stop SweepHull </button>
+                <button type="button" id="reloadButton" onclick="reload();"> Reload nodes </button><br>
+                <fieldset>
+                    <legend>Meshing</legend>
+                    <input type="number" id="start_delay_shull" min="0" value="0">
+                    <label for="start_delay_shull">Start delay</label><br>
+                    <input type="number" id="step_delay_shull" min="0"value="0">
+                    <label for="step_delay_shull">Step delay</label><br>
+                    <input type="number" id="show_every_shull" min="1"value="1">
+                    <label for="show_every_shull">Show every nth step</label>
+                </fieldset>
+                <fieldset>
+                    <legend>Flipping</legend>
+                    <input type="number" id="start_delay_delaunay" min="0"value="0">
+                    <label for="start_delay_delaunay">Start delay</label><br>
+                    <input type="number" id="step_delay_delaunay" min="0"value="0">
+                    <label for="step_delay_delaunay">Step delay</label><br>
+                    <input type="number" id="show_every_delaunay" min="1"value="1">
+                    <label for="show_every_delaunay">Show every nth step</label>
+                </fieldset>
+            </div>
+            <div id="nodes" class="tabcontent">
+                <label for="node_select">Nodes positions</label>
+                <select id="node_select" class="custom-select">
+                    <option value="fine">Fine</option>
+                    <option value="coarse">Coarse</option>
+                    <option value="circle">Circle</option>
+                    <option value="circle_fine">Fine Circle</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <div class="custom-file-input" style="display: none;">
+                    <div class="custom-browse-button">
+                        <label class="browse-button" for="custom_nodes">Upload custom file</label>
+                        <input type="file" id="custom_nodes" style="display: None;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+

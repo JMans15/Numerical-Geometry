@@ -1,0 +1,360 @@
+window.onload = main;
+
+const DEBUG = 1
+
+var divSetNdx = 0;
+var divSets = [];
+var divContainerElement
+
+var trans = [0, -.5];
+var zoom = .3
+
+function log(msg) {
+	if (DEBUG == 1)
+		console.log(msg)
+}
+
+function create_mesh_from_nodes(data) {
+	let mesh = {
+		faces: [],
+		edges: [],
+		nodes: []
+	}
+	for (var i = 0; i < data.length; i++) {
+		mesh.nodes.push({id: i, pos: data[i]})
+	}
+	return mesh
+}
+
+function create_program_dots(gl) {
+	var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+	gl.shaderSource(vertexShader, `
+	attribute vec3 position;
+	void main() {
+		gl_PointSize = 10.0;
+		gl_Position = vec4(position, 1);
+	}
+	`);
+	gl.compileShader(vertexShader);
+
+	// create fragment shader
+	var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(fragmentShader, `
+	precision mediump float;
+	void main() {
+		gl_FragColor = vec4(0.51, 0.65, 0.6, 1.0);
+		float r = length(2.0 * gl_PointCoord - 1.0);
+		if (r > 1.0) {
+			discard;
+		}
+	}
+	`);
+	gl.compileShader(fragmentShader);
+
+	var program = gl.createProgram();
+	gl.attachShader(program, vertexShader);
+	gl.attachShader(program, fragmentShader);
+	gl.linkProgram(program);
+
+	return program;
+}
+
+function create_program_tris(gl) {
+	var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+	gl.shaderSource(vertexShader, `
+	attribute vec3 position;
+	void main() {
+		gl_Position = vec4(position, 1);
+	}
+	`);
+	gl.compileShader(vertexShader);
+
+	// create fragment shader
+	var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+	gl.shaderSource(fragmentShader, `
+	precision mediump float;
+	void main() {
+		gl_FragColor = vec4(0.98, 0.29, 0.2, 1.0);
+	}
+	`);
+	gl.compileShader(fragmentShader);
+
+	var program = gl.createProgram();
+	gl.attachShader(program, vertexShader);
+	gl.attachShader(program, fragmentShader);
+	gl.linkProgram(program);
+
+	return program;
+}
+
+function draw_nodes(mesh, program) {
+	let points = []
+	for (var point of mesh.nodes) {
+		points.push(point.pos)
+	}
+	let vertexData = points.flat().map((e, i)=>{
+		if (i%3 == 0) {
+			return (2*e-1+trans[0]) * zoom;
+		}
+		if (i%3 == 1) {
+			return (2*e-1+trans[1]) * zoom;
+		}
+		return 0;
+	});
+	let positionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+	let positionLocation = gl.getAttribLocation(program, `position`);
+	gl.enableVertexAttribArray(positionLocation);
+	gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+	gl.useProgram(program);
+	gl.drawArrays(gl.POINTS, 0, points.length);
+}
+
+function draw_tris(mesh, program) {
+	gl.lineWidth(1);
+	let triangles = []
+	for (var tri of mesh.faces) {
+		triangles.push(tri.incidentEdge.orig.pos, tri.incidentEdge.dest.pos,
+			tri.incidentEdge.next.orig.pos, tri.incidentEdge.next.dest.pos,
+			tri.incidentEdge.next.next.orig.pos, tri.incidentEdge.next.next.dest.pos)
+	}
+	let vertexData = triangles.flat().map((e, i)=>{
+		if (i%3 == 0) {
+			return (2*e-1+trans[0]) * zoom;
+		}
+		if (i%3 == 1) {
+			return (2*e-1+trans[1]) * zoom;
+		}
+		return 0;
+	});
+	let positionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW);
+	let positionLocation = gl.getAttribLocation(program, `position`);
+	gl.enableVertexAttribArray(positionLocation);
+	gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+	gl.useProgram(program);
+	gl.drawArrays(gl.LINES, 0, triangles.length);
+}
+
+function is_in_circumcircle(point, triangle) {
+	// https://en.wikipedia.org/wiki/Delaunay_triangulation#Algorithms
+	let first_edge = triangle.incidentEdge
+	let A = first_edge.orig.pos
+	let B = first_edge.dest.pos
+	let C = first_edge.next.dest.pos
+	let D = point.pos
+	let Ax = A[0], Ay = A[1]
+	let Bx = B[0], By = B[1]
+	let Cx = C[0], Cy = C[1]
+	let Dx = D[0], Dy = D[1]
+	let det = 	(Ax-Dx)*(By-Dy)*((Cx*Cx-Dx*Dx)+(Cy*Cy-Dy*Dy)) +
+				(Bx-Dx)*(Cy-Dy)*((Ax*Ax-Dx*Dx)+(Ay*Ay-Dy*Dy)) +
+				(Cx-Dx)*(Ay-Dy)*((Bx*Bx-Dx*Dx)+(By*By-Dy*Dy)) +
+				-((Ax-Dx)*((Bx*Bx-Dx*Dx)+(By*By-Dy*Dy))*(Cy-Dy)) +
+				-((Bx-Dx)*((Cx*Cx-Dx*Dx)+(Cy*Cy-Dy*Dy))*(Ay-Dy)) +
+				-((Cx-Dx)*((Ax*Ax-Dx*Dx)+(Ay*Ay-Dy*Dy))*(By-Dy))
+	return det > 0
+}
+
+// assuming that the ids stay in the right order
+function remove_tris_from_mesh(mesh, tris) {
+	let tris_id = new Set()
+	for (var tri of tris) {
+		tris_id.add(tri.id)
+	}
+	for (var i = mesh.faces.length-1; i >= 0; i--) {
+		if (tris_id.has(mesh.faces[i].id)) {
+			log(`removing face ${mesh.faces[i].id}`)
+			tris_id.delete(mesh.faces[i].id)
+			mesh.faces.splice(i, 1)
+		}
+		else {mesh.faces[i].id = mesh.faces[i].id - tris_id.size}
+	}
+}
+
+// !!! if fucked up, check if conter clockwiseness is preserved (don't want to check right now) (i think it's ok)
+function add_tri_from_edge_and_point(edge, point, mesh) {
+	// !!! don't forget twins in higher function (done)
+	let ID = mesh.nodes.length + mesh.faces.length
+	mesh.faces.push({id: ID, incidentEdge: edge})
+	let I = mesh.edges.length
+	mesh.edges.push({orig: point, dest: edge.orig, next: edge, incidentFace: mesh.faces[mesh.faces.length-1]})
+	mesh.edges.push({orig: edge.dest, dest: point, next: mesh.edges[I], incidentFace: mesh.faces[mesh.faces.length-1]})
+	edge['next'] = mesh.edges[I+1]
+	edge['incidentFace'] = mesh.faces[mesh.faces.length-1]
+}
+
+function tris_to_ids(ls) {
+	let result = []
+	for (var el of ls) {
+		result.push(el.id)
+	}
+	return result
+}
+
+function edges_to_ids(ls) {
+	let result = []
+	for (var el of ls) {
+		result.push(`${el.orig.id} -> ${el.dest.id}`)
+	}
+	return result
+}
+
+// Expects a mesh with nodes only
+function Bowyer_Watson (mesh) {
+	// add super-triangle (smallest equilateral triangle enclosing unit square, assumption)
+	let s3 = Math.sqrt(3)
+	let A = [-1/s3, 0, 0]
+	let B = [1+1/s3, 0, 0]
+	let C = [1/2, s3/2+1, 0]
+	var I = mesh.nodes.length
+	mesh.nodes.push({id: I++, pos: A})
+	mesh.nodes.push({id: I++, pos: B})
+	mesh.nodes.push({id: I++, pos: C})
+	mesh.edges.push({orig: mesh.nodes[I-3], dest: mesh.nodes[I-2], twin: null})
+	mesh.edges.push({orig: mesh.nodes[I-2], dest: mesh.nodes[I-1], twin: null})
+	mesh.edges.push({orig: mesh.nodes[I-1], dest: mesh.nodes[I-3], twin: null})
+	mesh.edges[0]['next'] = mesh.edges[1]
+	mesh.edges[1]['next'] = mesh.edges[2]
+	mesh.edges[2]['next'] = mesh.edges[0]
+	mesh.faces.push({id: I, incidentEdge: mesh.edges[0]})
+	mesh.edges[0]['incidentFace'] = mesh.faces[0]
+	mesh.edges[1]['incidentFace'] = mesh.faces[0]
+	mesh.edges[2]['incidentFace'] = mesh.faces[0]
+
+	var pointno = 0
+	// add points one at a time
+	for (var point of mesh.nodes) {
+		log('================== Next point ==================')
+		let bad_triangles = []
+
+		// find invalid triangles
+		for (var triangle of mesh.faces) {
+			if (is_in_circumcircle(point, triangle)) {
+				bad_triangles.push(triangle)
+			}
+		}
+		log('bad_triangles:')
+		log(tris_to_ids(bad_triangles))
+		let poly = []
+
+		// find boundary of polygonal hole
+		//// list edges in bad_triangles
+		let bad_edges = new Set()
+		let shared = new Set()
+		for (var triangle of bad_triangles) {
+			for (var edge of [triangle.incidentEdge, triangle.incidentEdge.next, triangle.incidentEdge.next.next]) {
+				let key = [edge.orig.id, edge.dest.id].sort().toString()
+				if (!bad_edges.has(key)) {
+					bad_edges.add(key)
+				}
+				else {
+					shared.add(key)
+				}
+			}
+			}
+		for (var triangle of bad_triangles) {
+			for (var edge of [triangle.incidentEdge, triangle.incidentEdge.next, triangle.incidentEdge.next.next]) {
+				let key = [edge.orig.id, edge.dest.id].sort().toString()
+				if (!shared.has(key)) {
+					poly.push(edge)
+				}
+			}
+		}
+		log('poly:')
+		log(edges_to_ids(poly))
+		// remove bad triangles from mesh
+		remove_tris_from_mesh(mesh, bad_triangles)
+
+		// remesh hole
+		let new_edges = mesh.edges.length
+		for (var edge in poly) {
+			add_tri_from_edge_and_point(mesh.edges[edge], point, mesh)
+		}
+		//// update twins
+		let twinslist = {}
+		for (var e = new_edges; e < mesh.edges.length; e++) {
+			let key = [mesh.edges[e].orig.id, mesh.edges[e].dest.id].sort().toString()
+			if (twinslist.hasOwnProperty(key)) {
+				mesh.edges[e]['twin'] = mesh.edges[twinslist[key]]
+				mesh.edges[twinslist[key]]['twin'] = mesh.edges[e]
+			}
+			else {
+				twinslist[key] = e
+			}
+		}
+		log('new_mesh')
+		log(mesh)
+		if (pointno++ >= 1) return
+	}
+	// TODO: Remove super-triangle
+}
+
+function addDivSet(msg, x, y, color="black", isTriangle = false) {
+    
+    var divSet = divSets[divSetNdx++];
+
+    if (!divSet) { // Si n'existe pas, la creer
+      divSet = {};
+      divSet.div = document.createElement("div");
+      divSet.textNode = document.createTextNode("");
+      divSet.style = divSet.div.style;
+      divSet.div.className = "floating-div";
+
+      // Ajout du texte au noeud
+      divSet.div.appendChild(divSet.textNode);
+
+      // Ajout de la div au container
+      divContainerElement.appendChild(divSet.div);
+      divSets.push(divSet);
+    }
+
+    // Affichage et style
+    divSet.style.display = "block";
+    if (isTriangle){
+        divSet.style.left = Math.floor(x) -5 + "px";
+        divSet.style.top = Math.floor(y) -10+ "px";
+    }else{
+        divSet.style.left = Math.floor(x) + "px";
+        divSet.style.top = Math.floor(y) + "px";
+        divSet.style.margin = "1px"
+    }
+    divSet.style.color = color;
+    divSet.textNode.nodeValue = msg;
+}
+
+function main() {
+
+	const canvas = document.getElementById("glcanvas");
+	divContainerElement = document.querySelector("#divcontainer");
+	
+	gl = canvas.getContext('webgl');
+
+	if (!gl) {
+		alert('Your browser does not support WebGL');
+		return;
+	} else {
+		console.log('It works :-)');
+	}
+
+	mesh = create_mesh_from_nodes(nodeData)
+
+	gl.clearColor(0.98, 0.95, 0.78, 1)
+	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+	Bowyer_Watson(mesh)
+	let tri_program = create_program_tris(gl)
+	draw_tris(mesh, tri_program)
+	let dot_program = create_program_dots(gl)
+	draw_nodes(mesh, dot_program)
+
+	// draw nodes ids
+	for (node of mesh.nodes){
+		let clipspace = [(node.pos[0]*2-1+trans[0])*zoom, (node.pos[1]*2-1+trans[1])*zoom]
+		let pixelX = (clipspace[0] *  0.5 + 0.5) * gl.canvas.width;
+		let pixelY = (clipspace[1] * -0.5 + 0.5) * gl.canvas.height;
+
+		addDivSet(`${node.id}`, pixelX, pixelY, "blue");
+	}
+}
